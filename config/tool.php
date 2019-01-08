@@ -12,4 +12,7 @@ return [
     //whois查询命令
     'whois_command' => env('WHOIS_COMMAND', 'whois'),
 
+    //token key
+    'token_key' => env('TOKEN_KEY','token_key'),
+
 ];

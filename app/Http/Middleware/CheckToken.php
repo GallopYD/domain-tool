@@ -27,7 +27,8 @@ class CheckToken
         if ($now->gt($time)) {
             throw new ApiException('页面已过期，请刷新重试');
         }
-        if ($token != sha1(md5('tools_token' . $timestamp))) {
+        $key = config('tool.token_key');
+        if ($token != sha1(md5($key . $timestamp))) {
             throw new ApiException('非法访问');
         }
         return $next($request);

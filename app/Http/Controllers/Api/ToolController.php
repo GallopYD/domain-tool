@@ -147,7 +147,8 @@ class ToolController extends ApiController
     public function getToken()
     {
         $timestamp = time();
-        $token = sha1(md5('tools_token' . $timestamp));
+        $key = config('tool.token_key');
+        $token = sha1(md5($key . $timestamp));
         return response()->json(['data' => compact('timestamp', 'token')]);
     }
 }
