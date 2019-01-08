@@ -13,7 +13,7 @@
         "laravel/framework": "5.5.*",
         "laravel/tinker": "~1.0",
         "predis/predis": "^1.1",
-        "zircote/swagger-php": "^3.0"
+        "zircote/swagger-php": "2.*"
     },
     "require-dev": {
         "filp/whoops": "~2.0",
