@@ -24,7 +24,6 @@ class WhoisService extends BaseService
 
         $whois_info = $this->get_whois_info($domain, $fresh);
         $whois_info_arr = $this->whois_info_parse($whois_info['info']);
-        $this->storage($whois_info_arr, $domain);
         return compact('domain', 'whois_info', 'whois_info_arr');
     }
 
@@ -230,15 +229,4 @@ class WhoisService extends BaseService
         return ['updated_at' => $updated_at, 'info' => $whois_info_str];
     }
 
-    /**
-     * whois记录存储
-     * @param $whois_info_arr
-     * @param $domain
-     */
-    private function storage($whois_info_arr, $domain)
-    {
-        $data = $whois_info_arr;
-        $data['domain'] = $domain;
-        $this->dispatch(new WhoisStorage($data, true));
-    }
 }
