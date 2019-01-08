@@ -11,6 +11,7 @@
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
+Route::group(['namespace' => 'Web',], function () {
+    Route::get('/', 'IndexController@index')->name('index');
+    Route::get('/{type}', 'IndexController@index')->name('intercept');
 });
