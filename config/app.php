@@ -22,7 +22,7 @@ return [
     |
     | This value determines the "environment" your application is currently
     | running in. This may determine how you prefer to configure various
-    | services your application utilizes. Set this in your ".env" file.
+    | services the application utilizes. Set this in your ".env" file.
     |
     */
 
@@ -54,6 +54,8 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    'asset_url' => env('ASSET_URL', null),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone
@@ -65,7 +67,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'PRC',
 
     /*
     |--------------------------------------------------------------------------
@@ -91,7 +93,20 @@ return [
     |
     */
 
-    'fallback_locale' => 'en',
+    'fallback_locale' => 'zh_CN',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Faker Locale
+    |--------------------------------------------------------------------------
+    |
+    | This locale will be used by the Faker PHP library when generating fake
+    | data for your database seeds. For example, this will be used to get
+    | localized telephone numbers, street address information and more.
+    |
+    */
+
+    'faker_locale' => 'en_US',
 
     /*
     |--------------------------------------------------------------------------
@@ -107,23 +122,6 @@ return [
     'key' => env('APP_KEY'),
 
     'cipher' => 'AES-256-CBC',
-
-    /*
-    |--------------------------------------------------------------------------
-    | Logging Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Here you may configure the log settings for your application. Out of
-    | the box, Laravel uses the Monolog PHP logging library. This gives
-    | you a variety of powerful log handlers / formatters to utilize.
-    |
-    | Available Settings: "single", "daily", "syslog", "errorlog"
-    |
-    */
-
-    'log' => env('APP_LOG', 'single'),
-
-    'log_level' => env('APP_LOG_LEVEL', 'debug'),
 
     /*
     |--------------------------------------------------------------------------
@@ -227,5 +225,8 @@ return [
         'View' => Illuminate\Support\Facades\View::class,
 
     ],
+
+    //二级域后缀（常见二级域后缀+省级域名后缀）
+    'second_domain_suffix' => env('SECOND_DOMAIN_SUFFIX',['com.cn','net.cn','org.cn','gov.cn','edu.cn','ac.cn','ah.cn','bj.cn','cq.cn','fj.cn','gd.cn','gs.cn','gx.cn','gz.cn','ha.cn','hb.cn','he.cn','hi.cn','hk.cn','hl.cn','hn.cn','jl.cn','js.cn','jx.cn','ln.cn','mo.cn','nm.cn','nx.cn','qh.cn','sc.cn','sd.cn','sh.cn','sn.cn','sx.cn','tj.cn','xj.cn','xz.cn','yn.cn','zj.cn','tw.cn']),
 
 ];
