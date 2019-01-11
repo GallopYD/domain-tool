@@ -27,7 +27,7 @@
     <nav class="navbar navbar-expand-md navbar-light navbar-laravel">
         <div class="container">
             <a class="navbar-brand" href="{{ url('/') }}">
-                域名工具111
+                域名工具
             </a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
                     aria-controls="navbarSupportedContent" aria-expanded="false"
@@ -45,15 +45,19 @@
                     <!-- Authentication Links -->
                     <li class="nav-item">
                         <a class="nav-link @if(!\Illuminate\Support\Facades\Request::route()->type || \Illuminate\Support\Facades\Request::route()->type == 'qq') active @endif"
-                           href="{{route('intercept',['type'=>'qq'])}}">QQ查询</a>
+                           href="{{route('check',['type'=>'qq'])}}">QQ查询</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link @if(\Illuminate\Support\Facades\Request::route()->type == 'wechat') active @endif"
-                           href="{{route('intercept',['type'=>'wechat'])}}">微信查询</a>
+                           href="{{route('check',['type'=>'wechat'])}}">微信查询</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link @if(\Illuminate\Support\Facades\Request::route()->type == '360') active @endif"
-                           href="{{route('intercept',['type'=>'360'])}}">360查询</a>
+                           href="{{route('check',['type'=>'360'])}}">360查询</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @if(\Illuminate\Support\Facades\Request::route()->type == 'whois') active @endif"
+                           href="{{route('check',['type'=>'whois'])}}">Whois</a>
                     </li>
                 </ul>
             </div>
