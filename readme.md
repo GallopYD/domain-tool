@@ -2,14 +2,16 @@
 
 域名工具
 
-* QQ拦截查询
-* 微信拦截查询
-* 360拦截查询
-* Whois查询  
-
 [![](https://img.shields.io/badge/Powered%20by-GallopYD-green.svg)](https://357.im/)
 [![GitHub contributors](https://img.shields.io/github/contributors/GallopYD/domain-tool.svg)](https://github.com/GallopYD/domain-tool/graphs/contributors)
 [![](https://img.shields.io/badge/language-PHP-blue.svg)](https://github.com/GallopYD/domain-tool)
+
+## 功能
+
+* QQ拦截查询
+* 微信拦截查询
+* 360拦截查询<sup>beta</sup>
+* Whois查询  
 
 ## 原理
 - QQ：调用**腾讯电脑管家**域名查询接口，失败则调用**第三方**接口
