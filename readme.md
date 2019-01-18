@@ -19,6 +19,12 @@
 - 360：**360网站安全监测**（不稳定），失败则爬取**站长之家**网站安全检测
 - whois：使用linux下的 **whois/jwhois** 或其他whois插件
 
+## 环境
+
+- PHP >= 7.0
+- php_redis 扩展
+- Laravel 5.5
+
 ## 安装
 
 > $ git clone https://github.com/GallopYD/domain-tool.git
