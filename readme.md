@@ -1,58 +1,52 @@
-<p align="center"><img src="https://laravel.com/assets/img/components/logo-laravel.svg"></p>
+# DomainTool
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/d/total.svg" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/v/stable.svg" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/license.svg" alt="License"></a>
-</p>
+域名工具
 
-## About Laravel
+* QQ拦截查询
+* 微信拦截查询
+* 360拦截查询
+* Whois查询  
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel attempts to take the pain out of development by easing common tasks used in the majority of web projects, such as:
+[![](https://img.shields.io/badge/Powered%20by-GallopYD-green.svg)](https://357.im/)
+[![GitHub contributors](https://img.shields.io/github/contributors/GallopYD/domain-tool.svg)](https://github.com/GallopYD/domain-tool/graphs/contributors)
+[![](https://img.shields.io/badge/language-PHP-blue.svg)](https://github.com/GallopYD/domain-tool)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 原理
+- QQ：调用**腾讯电脑管家**域名查询接口，失败则调用**第三方**接口
+- 微信：通过**公众号**（或测试号）生成短链接，再访问短链接测试访问结果，失败则调用**第三方**接口
+- 360：**360网站安全监测**（不稳定），失败则爬取**站长之家**网站安全检测
+- whois：使用linux下的 **whois/jwhois** 或其他whois插件
 
-Laravel is accessible, yet powerful, providing tools needed for large, robust applications.
+## 安装
 
-## Learning Laravel
+> $ git clone https://github.com/GallopYD/domain-tool.git
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of any modern web application framework, making it a breeze to get started learning the framework.
+> $ cd domain-tool && composer install
 
-If you're not in the mood to read, [Laracasts](https://laracasts.com) contains over 1100 video tutorials on a range of topics including Laravel, modern PHP, unit testing, JavaScript, and more. Boost the skill level of yourself and your entire team by digging into our comprehensive video library.
+> $ yum install -y jwhois
 
-## Laravel Sponsors
+## 代理
+-  不使用代理：QQ管家查询及第三方查询结果不准确
+- 使用代理：查询结果较为准确
+  - 使用免费代理：https://proxy.357.im/ ，源码：[免费代理池](https://github.com/GallopYD/proxy-pool)
+  - 使用付费代理：修改 **app\Utils\ProxyUtil.php** 获取代理方法
 
-We would like to extend our thanks to the following sponsors for helping fund on-going Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell):
+## 配置
+- 获取代理地址
+```shell
+PROXY_POOL_HOST=https://proxy.357.im/
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[British Software Development](https://www.britishsoftware.co)**
-- [Fragrantica](https://www.fragrantica.com)
-- [SOFTonSOFA](https://softonsofa.com/)
-- [User10](https://user10.com)
-- [Soumettre.fr](https://soumettre.fr/)
-- [CodeBrisk](https://codebrisk.com)
-- [1Forge](https://1forge.com)
-- [TECPRESSO](https://tecpresso.co.jp/)
-- [Pulse Storm](http://www.pulsestorm.net/)
-- [Runtime Converter](http://runtimeconverter.com/)
-- [WebL'Agence](https://weblagence.com/)
+- 微信测试号/服务号（微信接口频率限制：1000/10000 每天）
 
-## Contributing
+```shell
+WECHAT_ACCOUNT=[{"app_id":"wx124d666666666666","app_secret":"8cd0b6f79d8008d0d265666666666666"}]
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## 初始化
 
-## Security Vulnerabilities
+> $ php artisan l5:gen
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 使用
+- 前台：HOST
+- API文档 ：HOST/api/doc
