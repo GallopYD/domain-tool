@@ -9086,3 +9086,14 @@ a.text-dark:focus, a.text-dark:hover {
     margin: -5px 0 0 2px;
     height: 20px;
 }
+
+.my-footer{
+    width: 100%;
+    position: fixed;
+    z-index: 999;
+    bottom: 10px;
+    /*left: 0px;*/
+    _position:absolute;
+    overflow:hidden;
+    *zoom:1;
+}
