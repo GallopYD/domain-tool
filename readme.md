@@ -31,6 +31,10 @@
 
 > $ cd domain-tool && composer install
 
+> $ php artisan key:gen
+
+> $ cp .env.example .env
+
 > $ yum install -y jwhois
 
 ## 代理
@@ -40,6 +44,11 @@
   - 使用付费代理：修改 **app\Utils\ProxyUtil.php** 获取代理方法
 
 ## 配置
+
+修改.env文件中，以下两处：
+
+> $ vim .env
+
 - 获取代理地址
 ```shell
 PROXY_POOL_HOST=https://proxy.357.im/
