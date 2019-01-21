@@ -9081,3 +9081,8 @@ a.text-dark:focus, a.text-dark:hover {
 .table-bg{
     background-color: white;
 }
+
+.github-logo{
+    margin: -5px 0 0 2px;
+    height: 20px;
+}

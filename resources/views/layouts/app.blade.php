@@ -59,6 +59,13 @@
                         <a class="nav-link @if(\Illuminate\Support\Facades\Request::route()->type == 'whois') active @endif"
                            href="{{route('check',['type'=>'whois'])}}">Whois</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" target="_blank" href="/api/doc">API</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" target="_blank" href="https://github.com/GallopYD/domain-tool">GitHub<img
+                                    class="github-logo" src="{{asset('images/github.jpg')}}"></a>
+                    </li>
                 </ul>
             </div>
         </div>
