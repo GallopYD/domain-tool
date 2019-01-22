@@ -41,7 +41,7 @@
 -  不使用代理：QQ管家查询及第三方查询结果不准确
 - 使用代理：查询结果较为准确
   - 使用免费代理：https://proxy.357.im/ ，源码：[免费代理池](https://github.com/GallopYD/proxy-pool)
-  - 使用付费代理：修改 **app\Utils\ProxyUtil.php** 获取代理方法
+  - 使用其他代理：修改 **app\Utils\ProxyUtil.php** 获取代理方法
 
 ## 配置
 
