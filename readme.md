@@ -31,16 +31,16 @@
 
 > $ cd domain-tool && composer install
 
-> $ php artisan key:gen
-
 > $ cp .env.example .env
+
+> $ php artisan key:gen
 
 > $ yum install -y jwhois
 
 ## 代理
 -  不使用代理：QQ管家查询及第三方查询结果不准确
 - 使用代理：查询结果较为准确
-  - 使用免费代理：https://proxy.357.im/ ，源码：[免费代理池](https://github.com/GallopYD/proxy-pool)
+  - 使用免费代理：https://proxy.357.im/ ，源码：[https://github.com/GallopYD/proxy-pool](https://github.com/GallopYD/proxy-pool)
   - 使用其他代理：修改 **app\Utils\ProxyUtil.php** 获取代理方法
 
 ## 配置
@@ -60,7 +60,7 @@ PROXY_POOL_HOST=https://proxy.357.im/
 WECHAT_ACCOUNT=[{"app_id":"wx124d666666666666","app_secret":"8cd0b6f79d8008d0d265666666666666"}]
 ```
 
-## 初始化
+## 初始化(API文档)
 
 > $ php artisan l5:gen
 
