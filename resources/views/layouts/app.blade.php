@@ -44,12 +44,12 @@
                 <ul class="navbar-nav ml-auto">
                     <!-- Authentication Links -->
                     <li class="nav-item">
-                        <a class="nav-link @if(!\Illuminate\Support\Facades\Request::route()->type || \Illuminate\Support\Facades\Request::route()->type == 'qq') active @endif"
-                           href="{{route('check',['type'=>'qq'])}}">QQ查询</a>
+                        <a class="nav-link @if(!\Illuminate\Support\Facades\Request::route()->type || \Illuminate\Support\Facades\Request::route()->type == 'wechat') active @endif"
+                           href="{{route('check',['type'=>'wechat'])}}">微信查询</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link @if(\Illuminate\Support\Facades\Request::route()->type == 'wechat') active @endif"
-                           href="{{route('check',['type'=>'wechat'])}}">微信查询</a>
+                        <a class="nav-link @if(\Illuminate\Support\Facades\Request::route()->type == 'qq') active @endif"
+                           href="{{route('check',['type'=>'qq'])}}">QQ查询</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link @if(\Illuminate\Support\Facades\Request::route()->type == '360') active @endif"

@@ -15,7 +15,7 @@
                             </button>
                             <div id="whois" style="line-height: 2;padding: 20px;white-space: pre;display: none"></div>
                         @else
-                            <textarea id="domains" class="form-control" rows="3" name="domains"
+                            <textarea id="domains" class="form-control" rows="5" name="domains"
                                       placeholder="请输入要查询的域名，一行一个"></textarea>
                             <button type="button" id="search" class="btn btn-success search-btn" onclick="search()">查询
                             </button>
