@@ -133,7 +133,7 @@ class DomainUtil
      */
     public static function checkFormat($domain)
     {
-        if (preg_match("/^([\x{4e00}-\x{9fa5}]|[a-zA-Z0-9-])+(\.[a-z]{2,5})?\.([a-z]|[\x{4e00}-\x{9fa5}]){2,10}$/ui", $domain)) {
+        if (preg_match("/^(([\x{4e00}-\x{9fa5}]|[a-zA-Z0-9-])+(\.[a-z]{2,5})?\.)+([a-z]|[\x{4e00}-\x{9fa5}]){2,10}$/ui", $domain)) {
             // 去掉-开头的域名
             if (substr($domain, 0, 1) != '-' && stripos($domain, '--') === FALSE) {
                 return true;
