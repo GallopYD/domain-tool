@@ -129,35 +129,37 @@ class WeChatService extends BaseService
      */
     private function getShortUrl($access_token, $domain, $proxy)
     {
-        $client = new Client();
-        $url = "https://api.weixin.qq.com/cgi-bin/shorturl?access_token=$access_token";
-        $options = [
-            'json' => [
-                'action' => 'long2short',
-                'long_url' => 'http://' . $domain,
-            ],
-            'connect_timeout' => 3,
-            'timeout' => 3,
-        ];
-        //是否使用代理
-        if ($proxy) {
-            $options['proxy'] = $proxy;
+        if (!$short_url = Redis::get('short_url:' . $domain)) {
+            $client = new Client();
+            $url = "https://api.weixin.qq.com/cgi-bin/shorturl?access_token=$access_token";
+            $options = [
+                'json' => [
+                    'action' => 'long2short',
+                    'long_url' => 'http://' . $domain,
+                ],
+                'connect_timeout' => 3,
+                'timeout' => 3,
+            ];
+            //是否使用代理
+            if ($proxy) {
+                $options['proxy'] = $proxy;
+            }
+            $response = $client->request('POST', $url, $options);
+            $contents = $response->getBody()->getContents();
+            //AccessToken非法
+            if (strpos($contents, 'access_token is invalid') !== false) {
+                Redis::del('wechat:access_token:' . $this->config['app_id']);
+                throw new \Exception('access_token is invalid');
+            } else {
+                $data = json_decode($contents, true);
+                $short_url = $data['short_url'];
+                //接口频次限制
+                $this->setInterfaceLimit();
+                //短链接缓存90天
+                Redis::setex('short_url:' . $domain, 24 * 60 * 60 * 90, $short_url);
+            }
         }
-        $response = $client->request('POST', $url, $options);
-        $contents = $response->getBody()->getContents();
-        //AccessToken非法
-        if (strpos($contents, 'access_token is invalid') !== false) {
-            Redis::del('wechat:access_token:' . $this->config['app_id']);
-            throw new \Exception('access_token is invalid');
-        } else {
-            $data = json_decode($contents, true);
-            $short_url = $data['short_url'];
-
-            //接口频次限制
-            $this->setInterfaceLimit();
-
-            return $short_url;
-        }
+        return $short_url;
     }
 
     /**
