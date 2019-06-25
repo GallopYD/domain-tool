@@ -48,8 +48,8 @@
     <script>
         function search() {
             $('#success').html('');
-            $('#intercept').append('');
-            $('#fail').append('');
+            $('#intercept').html('');
+            $('#fail').html('');
             var domains = ($('#domains').val()).split(/[(\r\n)\r\n]+/);
             if (domains) {
                 for (var i = 0; i < domains.length; i++) {
