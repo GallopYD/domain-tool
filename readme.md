@@ -13,7 +13,7 @@
 * 360拦截查询<sup>beta</sup>
 * Whois查询  
 
-## 原理
+## 解决方案
 - QQ：调用**腾讯电脑管家**域名查询接口，失败则调用**第三方**接口
 - 微信：通过**公众号**（或测试号）生成短链接，再访问短链接测试访问结果，失败则调用**第三方**接口
 - 360：**360网站安全监测**（不稳定），失败则爬取**站长之家**网站安全检测
@@ -37,25 +37,26 @@
 
 > $ yum install -y jwhois
 
-## 代理
--  不使用代理：QQ管家查询及第三方查询结果不准确
-- 使用代理：查询结果较为准确
-  - 自行部署代理，可参考：[https://github.com/GallopYD/proxy-pool](https://github.com/GallopYD/proxy-pool)
-  - 使用其他代理：修改 **app\Utils\ProxyUtil.php** 获取代理方法
 
 ## 配置
 
-修改.env文件中，以下两处：
-
-> $ vim .env
-
-- 获取代理地址
+#### 缓存
+**默认**开启缓存，缓存时间为24小时，配置如下：
 ```shell
-PROXY_HOST=https://proxy.357.im/
+$ vim .env
+TOOL_CACHE_ENABLE=true
 ```
 
-- 微信测试号/服务号（微信接口频率限制：1000/10000 每天）
+####  代理
+**默认**不使用代理，查询结果可能不准确。如需使用代理，配置env文件（代理格式为TXT）：
+```shell
+$ vim .env
+PROXY_HOST=http://api.xdaili.cn/xdaili-api/greatRecharge/getGreatIp...
+```
+如需自行部署代理，可参考[免费代理池](https://github.com/GallopYD/proxy-pool)
 
+#### 微信
+微信测试号/服务号（微信接口频率限制：1000/10000 每天）
 ```shell
 WECHAT_ACCOUNT=[{"app_id":"wx124d666666666666","app_secret":"8cd0b6f79d8008d0d265666666666666"}]
 ```
@@ -65,5 +66,6 @@ WECHAT_ACCOUNT=[{"app_id":"wx124d666666666666","app_secret":"8cd0b6f79d8008d0d26
 > $ php artisan l5:gen
 
 ## 使用
+
 - 前台：HOST
 - API文档 ：HOST/api/doc
