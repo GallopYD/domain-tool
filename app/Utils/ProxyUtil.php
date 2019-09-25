@@ -32,7 +32,6 @@ class ProxyUtil
 
     /**
      * 获取代理列表
-     * 格式：TXT
      * @return null
      */
     public static function getProxyList()
@@ -41,7 +40,7 @@ class ProxyUtil
         $import_url = config('tool.proxy_host');
         if (!Redis::llen('proxy_list')) {
             if ($import_url) {
-                $data = file_get_contents($import_url);
+                $data = file_get_contents($import_url);// TXT格式
                 $proxies = array_values(explode("\n", $data));
                 foreach ($proxies as $proxy) {
                     Redis::rpush('proxy_list', trim($proxy));
