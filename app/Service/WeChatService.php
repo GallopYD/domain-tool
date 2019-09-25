@@ -18,34 +18,34 @@ class WeChatService extends BaseService
 
     public function __construct()
     {
-        //获取测试号配置
-        $this->config = $this->getConfig();
+        parent::__construct();
+        $this->config = $this->getConfig();//获取测试号配置
     }
 
     /**
      * 微信域名检测
      * @param $domain
-     * @param $fresh
      * @param int $try
      * @return bool|int
      */
-    public function check($domain, $fresh = false, $try = 1)
+    public function check($domain, $try = 1)
     {
-        if ((!$intercept = Redis::get('intercept:wecaht:' . $domain)) || $fresh) {
-
+        //是否有缓存
+        if (!($this->cache_enable && ($intercept = Redis::get('intercept:wecaht:' . $domain)))) {
+            //获取代理
+            $proxy = ProxyUtil::getProxy();
             //优先短链接检测
             $intercept = $this->checkViaShortUrl($domain, null);
-
             if ($intercept == 0 && $try < 2) {
                 //失败重试
-                return $this->check($domain, $fresh, ++$try);
+                return $this->check($domain, ++$try);
             } elseif ($intercept == 0) {
-                //短链接查询失败，查询第三方
-                $proxy = ProxyUtil::getValidProxy();
                 $intercept = $this->checkViaAdopt($domain, $proxy);
             } elseif ($intercept) {
-                //查询成功，检测结果缓存24小时
-                Redis::setex('intercept:wecaht:' . $domain, 24 * 60 * 60, $intercept);
+                if ($this->cache_enable) {
+                    //查询成功，检测结果缓存24小时
+                    Redis::setex('intercept:wecaht:' . $domain, 24 * 60 * 60, $intercept);
+                }
             }
         }
 

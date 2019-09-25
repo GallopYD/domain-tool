@@ -15,4 +15,7 @@ return [
     //token key
     'token_key' => env('TOKEN_KEY', 'token_key'),
 
+    //查询结果缓存
+    'cache_enable' => env('TOOL_CACHE_ENABLE', true),
+
 ];

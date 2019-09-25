@@ -18,24 +18,27 @@ class QQService extends BaseService
     /**
      * QQ域名检测
      * @param $domain
-     * @param $fresh
      * @param int $try
      * @return bool|int
      */
-    public function check($domain, $fresh = false, $try = 1)
+    public function check($domain, $try = 1)
     {
-        if ((!$intercept = Redis::get('intercept:qq:' . $domain)) || $fresh) {
+        //是否有缓存
+        if (!($this->cache_enable && ($intercept = Redis::get('intercept:qq:' . $domain)))) {
             //获取代理
-            $proxy = ProxyUtil::getValidProxy();
+            $proxy = ProxyUtil::getProxy();
             $intercept = $this->checkViaGuanJia($domain, $proxy);
             //查询失败重试
             if ($intercept == 0 && $try < 3) {
-                return $this->check($domain, $fresh, ++$try);
+                return $this->check($domain, ++$try);
             } elseif ($intercept == 0) {
                 //短链接查询失败，查询第三方
                 $intercept = $this->checkViaAdopt($domain, $proxy);
             } elseif ($intercept) {
-                Redis::setex('intercept:qq:' . $domain, 24 * 60 * 60, $intercept);
+                if ($this->cache_enable) {
+                    //查询成功，检测结果缓存24小时
+                    Redis::setex('intercept:qq:' . $domain, 24 * 60 * 60, $intercept);
+                }
             }
         }
         return $intercept;

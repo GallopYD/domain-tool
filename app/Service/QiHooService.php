@@ -18,22 +18,24 @@ class QiHooService extends BaseService
     /**
      * 360域名检测【Beta】
      * @param $domain
-     * @param $fresh
      * @param int $try
      * @return bool|int
      */
-    public function check($domain, $fresh = false, $try = 1)
+    public function check($domain, $try = 1)
     {
-        if ((!$intercept = Redis::get('intercept:360:' . $domain)) || $fresh) {
+        //是否有缓存
+        if (!($this->cache_enable && ($intercept = Redis::get('intercept:360:' . $domain)))) {
             //获取代理
-            $proxy = ProxyUtil::getValidProxy();
+            $proxy = ProxyUtil::getProxy();
             $intercept = $this->checkProcess($domain, $proxy);
             //查询失败重试
             if ($intercept == 0 && $try < 2) {
-                return $this->check($domain, $fresh, ++$try);
+                return $this->check($domain, ++$try);
             } elseif ($intercept) {
-                //查询成功，检测结果缓存24小时
-                Redis::setex('intercept:360:' . $domain, 24 * 60 * 60, $intercept);
+                if ($this->cache_enable) {
+                    //查询成功，检测结果缓存24小时
+                    Redis::setex('intercept:360:' . $domain, 24 * 60 * 60, $intercept);
+                }
             }
         }
         return $intercept;

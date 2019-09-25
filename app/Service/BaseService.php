@@ -13,6 +13,14 @@ use Illuminate\Http\Request;
 class BaseService
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+
+    protected $cache_enable;
+
+    public function __construct()
+    {
+        $this->cache_enable = config('tool.cache_enable');
+    }
+
     /**
      * Get a validation factory instance.
      *
@@ -48,7 +56,8 @@ class BaseService
      * @param Request $request
      * @param $validator
      */
-    protected function throwValidationException(\Illuminate\Http\Request $request, $errors) {
+    protected function throwValidationException(\Illuminate\Http\Request $request, $errors)
+    {
         throw new ValidationHttpException($errors);
     }
 }
