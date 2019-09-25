@@ -17,15 +17,20 @@ class ProxyUtil
 
     /**
      * 获取代理
-     * @return bool|string
+     * @param bool $refresh
+     * @return null
      */
-    public static function getProxy()
+    public static function getProxy($refresh = false)
     {
-        if (!$proxy = Redis::get('proxy')) {
-            $proxy = self::getProxyList();
-        }
-        if (!$proxy) {
-            Log::info("获取代理失败");
+        $proxy = null;
+        $proxy_enable = config('tool.proxy_enable');
+        if ($proxy_enable) {
+            if ($refresh || !$proxy = Redis::get('proxy')) {
+                $proxy = self::getProxyList();
+            }
+            if (!$proxy) {
+                Log::info("获取代理失败");
+            }
         }
         return $proxy;
     }
@@ -48,6 +53,7 @@ class ProxyUtil
             }
         }
         $proxy = Redis::lpop('proxy_list');
+        Log::info("获取代理：" . $proxy);
         return $proxy;
     }
 }

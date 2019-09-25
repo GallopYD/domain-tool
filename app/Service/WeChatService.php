@@ -30,25 +30,33 @@ class WeChatService extends BaseService
      */
     public function check($domain, $try = 1)
     {
+        $intercept = 0;
         //是否有缓存
         if (!($this->cache_enable && ($intercept = Redis::get('intercept:wecaht:' . $domain)))) {
             //获取代理
-            $proxy = ProxyUtil::getProxy();
+            $proxy = $try > 1 ? ProxyUtil::getProxy(true) : ProxyUtil::getProxy(false);
             //优先短链接检测
-            $intercept = $this->checkViaShortUrl($domain, null);
+            $intercept = $this->checkViaShortUrl($domain, $proxy);
             if ($intercept == 0 && $try < 2) {
                 //失败重试
                 return $this->check($domain, ++$try);
             } elseif ($intercept == 0) {
                 $intercept = $this->checkViaAdopt($domain, $proxy);
-            } elseif ($intercept) {
-                if ($this->cache_enable) {
-                    //查询成功，检测结果缓存24小时
-                    Redis::setex('intercept:wecaht:' . $domain, 24 * 60 * 60, $intercept);
-                }
             }
         }
-
+        if ($intercept) {
+            //检测结果缓存
+            if ($this->cache_enable) {
+                Redis::setex('intercept:wecaht:' . $domain, 24 * 60 * 60, $intercept);
+            }
+            //代理缓存
+            if (isset($proxy)) {
+                Redis::setex('proxy', 60, $proxy);
+            }
+        } elseif (isset($proxy)) {
+            //删除代理
+            Redis::del('proxy');
+        }
         return $intercept;
     }
 
@@ -66,9 +74,9 @@ class WeChatService extends BaseService
             //获取AccessToken
             $access_token = $this->getAccessToken();
             //生成短链接
-            $short_url = $this->getShortUrl($access_token, $domain, $proxy);
+            $short_url = $this->getShortUrl($access_token, $domain);
             //短链接检测
-            if ($res = $this->checkShortUrl($short_url)) {
+            if ($res = $this->checkShortUrl($short_url, $proxy)) {
                 $intercept = 1;
             } else {
                 $intercept = 2;
@@ -127,7 +135,7 @@ class WeChatService extends BaseService
      * @return mixed
      * @throws \Exception
      */
-    private function getShortUrl($access_token, $domain, $proxy)
+    private function getShortUrl($access_token, $domain, $proxy = null)
     {
         if (!$short_url = Redis::get('short_url:' . $domain)) {
             $client = new Client();
@@ -165,9 +173,10 @@ class WeChatService extends BaseService
     /**
      * 短链接拦截检测
      * @param $url
+     * @param null $proxy
      * @return bool
      */
-    private function checkShortUrl($url)
+    private function checkShortUrl($url, $proxy = null)
     {
         try {
             $client = new Client();
@@ -175,6 +184,10 @@ class WeChatService extends BaseService
                 'connect_timeout' => 2,
                 'timeout' => 2,
             ]);
+            //是否使用代理
+            if ($proxy) {
+                $options['proxy'] = $proxy;
+            }
             $contents = $response->getBody()->getContents();
             if (strpos($contents, '已停止访问该网页')) {
                 return false;

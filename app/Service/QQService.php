@@ -23,10 +23,11 @@ class QQService extends BaseService
      */
     public function check($domain, $try = 1)
     {
+        $intercept = 0;
         //是否有缓存
         if (!($this->cache_enable && ($intercept = Redis::get('intercept:qq:' . $domain)))) {
             //获取代理
-            $proxy = ProxyUtil::getProxy();
+            $proxy = $try > 1 ? ProxyUtil::getProxy(true) : ProxyUtil::getProxy(false);
             $intercept = $this->checkViaGuanJia($domain, $proxy);
             //查询失败重试
             if ($intercept == 0 && $try < 3) {
@@ -34,12 +35,20 @@ class QQService extends BaseService
             } elseif ($intercept == 0) {
                 //短链接查询失败，查询第三方
                 $intercept = $this->checkViaAdopt($domain, $proxy);
-            } elseif ($intercept) {
-                if ($this->cache_enable) {
-                    //查询成功，检测结果缓存24小时
-                    Redis::setex('intercept:qq:' . $domain, 24 * 60 * 60, $intercept);
-                }
             }
+        }
+        if ($intercept) {
+            //检测结果缓存
+            if ($this->cache_enable) {
+                Redis::setex('intercept:qq:' . $domain, 24 * 60 * 60, $intercept);
+            }
+            //代理缓存
+            if (isset($proxy)) {
+                Redis::setex('proxy', 60, $proxy);
+            }
+        } elseif (isset($proxy)) {
+            //删除代理
+            Redis::del('proxy');
         }
         return $intercept;
     }

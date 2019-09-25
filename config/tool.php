@@ -2,6 +2,9 @@
 
 return [
 
+    //开启代理
+    'proxy_enable' => env('PROXY_ENABLE', false),
+
     //代理地址
     'proxy_host' => env('PROXY_HOST'),
 

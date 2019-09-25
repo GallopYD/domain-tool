@@ -23,20 +23,29 @@ class QiHooService extends BaseService
      */
     public function check($domain, $try = 1)
     {
+        $intercept = 0;
         //是否有缓存
         if (!($this->cache_enable && ($intercept = Redis::get('intercept:360:' . $domain)))) {
             //获取代理
-            $proxy = ProxyUtil::getProxy();
+            $proxy = $try > 1 ? ProxyUtil::getProxy(true) : ProxyUtil::getProxy(false);
             $intercept = $this->checkProcess($domain, $proxy);
             //查询失败重试
             if ($intercept == 0 && $try < 2) {
                 return $this->check($domain, ++$try);
-            } elseif ($intercept) {
-                if ($this->cache_enable) {
-                    //查询成功，检测结果缓存24小时
-                    Redis::setex('intercept:360:' . $domain, 24 * 60 * 60, $intercept);
-                }
             }
+        }
+        if ($intercept) {
+            //检测结果缓存
+            if ($this->cache_enable) {
+                Redis::setex('intercept:360:' . $domain, 24 * 60 * 60, $intercept);
+            }
+            //代理缓存
+            if (isset($proxy)) {
+                Redis::setex('proxy', 60, $proxy);
+            }
+        } elseif (isset($proxy)) {
+            //删除代理
+            Redis::del('proxy');
         }
         return $intercept;
     }
