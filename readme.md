@@ -51,7 +51,7 @@
 
 - 获取代理地址
 ```shell
-PROXY_POOL_HOST=https://proxy.357.im/
+PROXY_HOST=https://proxy.357.im/
 ```
 
 - 微信测试号/服务号（微信接口频率限制：1000/10000 每天）

@@ -2,8 +2,8 @@
 
 namespace App\Utils;
 
-use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 
 /**
  * 代理
@@ -16,69 +16,39 @@ class ProxyUtil
     static $try = 0;
 
     /**
-     * 获取有效代理
+     * 获取代理
      * @return bool|string
      */
-    public static function getValidProxy()
+    public static function getProxy()
     {
-        if ($proxy = self::getProxyFromPool()) {
-            return $proxy;
+        if (!$proxy = Redis::get('proxy')) {
+            $proxy = self::getProxyList();
         }
-        return false;
+        if (!$proxy) {
+            Log::info("获取代理失败");
+        }
+        return $proxy;
     }
 
     /**
-     * 获取单条代理
-     * @return bool|string
+     * 获取代理列表
+     * 格式：TXT
+     * @return null
      */
-    public static function getProxyFromPool()
+    public static function getProxyList()
     {
-        //是否有获取代理URL
-        if (!$proxy_pool_host = config('tool.proxy_pool_host')) {
-            return false;
-        } else {
-            try {
-                //多次获取代理，首次获取稳定代理，后面获取优质代理
-                if (!self::$try) {
-                    $url = $proxy_pool_host . 'api/proxies/stable';
-                } else {
-                    $url = $proxy_pool_host . 'api/proxies/premium';
+        $proxy = null;
+        $import_url = config('tool.proxy_host');
+        if (!Redis::llen('proxy_list')) {
+            if ($import_url) {
+                $data = file_get_contents($import_url);
+                $proxies = array_values(explode("\n", $data));
+                foreach ($proxies as $proxy) {
+                    Redis::rpush('proxy_list', trim($proxy));
                 }
-                $client = new Client();
-                $response = $client->request('GET', $url, [
-                    'connect_timeout' => 3,
-                    'timeout' => 3,
-                ]);
-                $data = json_decode($response->getBody()->getContents(), true);
-                $proxy = $data['data']['protocol'] . '://' . $data['data']['ip'] . ':' . $data['data']['port'];
-                self::$try += 1;
-                return $proxy;
-            } catch (\Exception $exception) {
-                Log::info("获取代理失败：" . $exception->getMessage());
             }
         }
-        return false;
-    }
-
-    /**
-     * 检测代理IP是否可用
-     * @param $proxy
-     * @return bool
-     */
-    public static function checkProxy($proxy)
-    {
-        $client = new Client();
-        try {
-            $client->request('GET', 'http://www.baidu.com', [
-                'proxy' => $proxy,
-                'connect_timeout' => 2,
-                'timeout' => 2,
-            ]);
-            Log::info("代理[{$proxy}]可用");
-            return true;
-        } catch (\Exception $exception) {
-            Log::info("代理[{$proxy}]不可用：" . $exception->getMessage());
-        }
-        return false;
+        $proxy = Redis::lpop('proxy_list');
+        return $proxy;
     }
 }
