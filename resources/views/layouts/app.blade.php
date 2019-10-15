@@ -74,7 +74,7 @@
         @yield('content')
 
         <div class="text-center my-footer">
-            友情链接：<a href="https://proxy.357.im/">免费代理</a><br>
+            友情链接：<a href="https://github.com/GallopYD/proxy-pool">免费代理</a><br>
             <script type="text/javascript"
                     src="https://s23.cnzz.com/z_stat.php?id=1275295247&web_id=1275295247"></script>
         </div>
