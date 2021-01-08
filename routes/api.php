@@ -19,10 +19,7 @@ Route::group([
     'limit' => 300,
     'expires' => 5
 ], function () {
-    Route::get('tools/token', 'ToolController@getToken');
-    Route::group(['middleware' => 'check.token'], function () {
-        Route::post('tools/qq', 'ToolController@qq');//QQ拦截查询
-        Route::post('tools/wechat', 'ToolController@weChat');//微信拦截查询
-        Route::post('tools/whois', 'ToolController@whois');//whois查询
-    });
+    Route::post('tools/qq', 'ToolController@qq');
+    Route::post('tools/wechat', 'ToolController@wechat');
+    Route::post('tools/whois', 'ToolController@whois');
 });

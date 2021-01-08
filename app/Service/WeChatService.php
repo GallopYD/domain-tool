@@ -2,13 +2,11 @@
 
 namespace App\Service;
 
-use App\Utils\ProxyUtil;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 
 /**
- * 微信拦截检测
  * Class WeChatService
  * @package App\Service
  */
@@ -16,296 +14,160 @@ class WeChatService extends BaseService
 {
     private $config;
 
-    public function __construct()
+    /**
+     * 微信拦截检测
+     *
+     * @param $domain
+     * @return int
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function check($domain)
     {
-        parent::__construct();
-        $this->config = $this->getConfig();//获取测试号配置
+        if (!$intercept = Redis::get("intercept:wecaht:{$domain}")) {
+            if (!$intercept = $this->checkByHeaders($domain)) {
+                $intercept = $this->checkByShortUrl($domain);
+            }
+        }
+        // 检测结果缓存
+        if ($intercept && $this->cache_enable) {
+            Redis::setex("intercept:wecaht:{$domain}", 24 * 60 * 60, $intercept);
+        }
+        return (int)$intercept;
     }
 
     /**
-     * 微信域名检测
+     * 响应头检测
+     *
      * @param $domain
-     * @param int $try
-     * @return bool|int
+     * @return int
      */
-    public function check($domain, $try = 1)
+    public function checkByHeaders($domain)
     {
-        $intercept = 0;
-        //是否有缓存
-        if (!($this->cache_enable && ($intercept = Redis::get('intercept:wecaht:' . $domain)))) {
-            //获取代理
-            $proxy = $try > 1 ? ProxyUtil::getProxy(true) : ProxyUtil::getProxy(false);
-            //优先短链接检测
-            $intercept = $this->checkViaShortUrl($domain, $proxy);
-            if ($intercept == 0 && $try < 2) {
-                //失败重试
-                return $this->check($domain, ++$try);
-            } elseif ($intercept == 0) {
-                $intercept = $this->checkViaAdopt($domain, $proxy);
-            }
-        }
-        if ($intercept) {
-            //检测结果缓存
-            if ($this->cache_enable) {
-                Redis::setex('intercept:wecaht:' . $domain, 24 * 60 * 60, $intercept);
-            }
-            //代理缓存
-            if (isset($proxy)) {
-                Redis::setex('proxy', 60, $proxy);
-            }
-        } elseif (isset($proxy)) {
-            //删除代理
-            Redis::del('proxy');
-        }
-        return $intercept;
-    }
-
-    /**
-     * 微信域名检测
-     * @param $domain
-     * @param null $proxy
-     * @return int intercept：0查询失败 1正常 2拦截
-     */
-    private function checkViaShortUrl($domain, $proxy = null)
-    {
-        $intercept = 0;
-        $short_url = '';
         try {
-            //获取AccessToken
-            $access_token = $this->getAccessToken();
-            //生成短链接
-            $short_url = $this->getShortUrl($access_token, $domain);
-            //短链接检测
-            if ($res = $this->checkShortUrl($short_url, $proxy)) {
-                $intercept = 1;
-            } else {
-                $intercept = 2;
-            }
-            Log::info("微信拦截查询成功[域名：$domain][短链接:$short_url]：" . $intercept);
+            $headers = get_headers("http://mp.weixinbridge.com/mp/wapredirect?url=http://{$domain}");
+            $intercept = $headers[6] != "Location: http://{$domain}" ? 2 : 1;
         } catch (\Exception $exception) {
-            Log::info("微信拦截查询失败[域名：$domain][短链接:$short_url]：" . $exception->getMessage());
+            $intercept = 1;
         }
-
         return $intercept;
     }
 
     /**
-     * 获取Access_Token
+     * 短连接检测
+     *
+     * @param $domain
+     * @return int
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    private function checkByShortUrl($domain)
+    {
+        $intercept = 0;
+        try {
+            $access_token = $this->getAccessToken();// 获取AccessToken
+            $short_url = $this->getShortUrl($access_token, $domain);// 生成短链接
+            $intercept = $this->checkShortUrl($short_url) ? 1 : 2;// 短链接检测
+            Log::info("微信查询成功[$domain]", [$intercept, $short_url]);
+        } catch (\Exception $exception) {
+            Log::info("微信查询失败[$domain]：", [$exception->getMessage()]);
+        }
+        return $intercept;
+    }
+
+    /**
+     * 获取AccessToken
+     *
      * @return mixed
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
     private function getAccessToken()
     {
-        $app_id = $this->config['app_id'];
-        if (!$access_token = Redis::get('wechat:access_token:' . $app_id)) {
+        // 公众号配置
+        foreach (config('tool.wechat_account') as $account) {
+            $limit = Redis::get("wechat:account:{$account['app_id']}");
+            if (!$limit || $limit < 1000) {
+                $this->config = $account;
+                break;
+            }
+        }
+
+        if (!$access_token = Redis::get("wechat:access_token:{$this->config['app_id']}")) {
             $client = new Client();
-            $url = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=' . $this->config['app_id'] . '&secret=' . $this->config['app_secret'];
-            $response = $client->request('GET', $url, [
-                'connect_timeout' => 3,
-                'timeout' => 3,
-            ]);
+            $url = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid={$this->config['app_id']}&secret={$this->config['app_secret']}";
+            $response = $client->request('GET', $url, ['connect_timeout' => 3, 'timeout' => 3]);
             $contents = $response->getBody()->getContents();
             $data = json_decode($contents, true);
             $access_token = $data['access_token'];
-            Redis::setex('wechat:access_token:' . $app_id, 7100, $access_token);//微信access_token有效期为7200s
+            Redis::setex("wechat:access_token:{$this->config['app_id']}", 7100, $access_token);// access_token 缓存
         }
         return $access_token;
     }
 
     /**
-     * 获取微信配置
-     * @return mixed|null
-     */
-    private function getConfig()
-    {
-        $accounts = config('tool.wechat_account');
-        foreach ($accounts as $account) {
-            $limit = Redis::get('wechat:account:' . $account['app_id']);
-            if (!$limit || $limit < 1000) {
-                return $account;
-            }
-        }
-        return null;
-    }
-
-    /**
      * 获取短链接
+     *
      * @param $access_token
      * @param $domain
-     * @param $proxy
      * @return mixed
-     * @throws \Exception
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    private function getShortUrl($access_token, $domain, $proxy = null)
+    private function getShortUrl($access_token, $domain)
     {
-        if (!$short_url = Redis::get('short_url:' . $domain)) {
+        if (!$short_url = Redis::get("short_url:{$domain}")) {
             $client = new Client();
-            $url = "https://api.weixin.qq.com/cgi-bin/shorturl?access_token=$access_token";
+            $url = "https://api.weixin.qq.com/cgi-bin/shorturl?access_token={$access_token}";
             $options = [
-                'json' => [
-                    'action' => 'long2short',
-                    'long_url' => 'http://' . $domain,
-                ],
+                'json' => ['action' => 'long2short', 'long_url' => "http://{$domain}"],
                 'connect_timeout' => 3,
                 'timeout' => 3,
             ];
-            //是否使用代理
-            if ($proxy) {
-                $options['proxy'] = $proxy;
-            }
             $response = $client->request('POST', $url, $options);
             $contents = $response->getBody()->getContents();
-            //AccessToken非法
+
+            // AccessToken非法
             if (strpos($contents, 'access_token is invalid') !== false) {
-                Redis::del('wechat:access_token:' . $this->config['app_id']);
+                Redis::del("wechat:access_token:{$this->config['app_id']}");
                 throw new \Exception('access_token is invalid');
             } else {
                 $data = json_decode($contents, true);
                 $short_url = $data['short_url'];
-                //接口频次限制
-                $this->setInterfaceLimit();
-                //短链接缓存90天
-                Redis::setex('short_url:' . $domain, 24 * 60 * 60 * 90, $short_url);
+                $this->setApiLimit();// 接口频次限制
+                Redis::setex('short_url:' . $domain, 24 * 60 * 60 * 90, $short_url);// 短链接缓存90天
             }
         }
+
         return $short_url;
     }
 
     /**
      * 短链接拦截检测
+     *
      * @param $url
-     * @param null $proxy
      * @return bool
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    private function checkShortUrl($url, $proxy = null)
+    private function checkShortUrl($url)
     {
         try {
             $client = new Client();
-            $response = $client->request('GET', $url, [
-                'connect_timeout' => 2,
-                'timeout' => 2,
-            ]);
-            //是否使用代理
-            if ($proxy) {
-                $options['proxy'] = $proxy;
-            }
+            $response = $client->request('GET', $url, ['connect_timeout' => 1, 'timeout' => 1]);
             $contents = $response->getBody()->getContents();
-            if (strpos($contents, '已停止访问该网页')) {
-                return false;
-            } else {
-                return true;
-            }
+            $res = strpos($contents, '已停止访问该网页') ? false : true;
         } catch (\Exception $exception) {
-            //网站无法访问 = 未拦截
-            return true;
+            $res = true;// 网站无法访问 = 未拦截
         }
+        return $res;
     }
 
     /**
      * 接口频次限制
-     * 公众号短链接接口：1000次/天
      */
-    private function setInterfaceLimit()
+    private function setApiLimit()
     {
-        $app_id = $this->config['app_id'];
-        if (!$count = Redis::get('wechat:account:' . $app_id)) {
-            //当天有效
-            $expire = mktime(23, 59, 59) - mktime(date('H'), date('i'), date('s'));
-            Redis::setex('wechat:account:' . $app_id, $expire, 1);
+        if (!$count = Redis::get("wechat:account:{$this->config['app_id']}")) {
+            $expire = mktime(23, 59, 59) - mktime(date('H'), date('i'), date('s'));// 当天有效
+            Redis::setex("wechat:account:{$this->config['app_id']}", $expire, 1);
         } else {
-            Redis::incr('wechat:account:' . $app_id);
+            Redis::incr("wechat:account:{$this->config['app_id']}");
         }
     }
-
-    /**
-     * 微信第三方检测
-     * @param $domain
-     * @param null $proxy
-     * @return int
-     */
-    private function checkViaAdopt($domain, $proxy = null)
-    {
-        $intercept = 0;
-        try {
-            $intercept = $this->checkViaWeiXinClup($domain, $proxy);
-            Log::info("微信拦截查询成功[域名：{$domain}][weixinclup.com][代理：$proxy]：" . $intercept);
-        } catch (\Exception $exception) {
-            Log::info("微信拦截查询失败[域名：{$domain}][weixinclup.com][代理：$proxy]：" . $exception->getMessage());
-            if ($exception->getMessage() == 'Exceeding times') {
-                try {
-                    $intercept = $this->checkViaDingXsd($domain, $intercept);
-                    Log::info("微信拦截查询成功[域名：{$domain}][dingxsd.com][代理：$proxy]：" . $intercept);
-                } catch (\Exception $e) {
-                    Log::info("微信拦截查询失败[域名：{$domain}][dingxsd.com][代理：$proxy]：" . $exception->getMessage());
-                }
-            }
-        }
-        return $intercept;
-    }
-
-    /**
-     * weixinclup.com 微信拦截检测
-     * @param $domain
-     * @param null $proxy
-     * @return int
-     * @throws \Exception
-     */
-    private function checkViaWeiXinClup($domain, $proxy = null)
-    {
-        $client = new Client();
-        $options = [
-            'connect_timeout' => 5,
-            'timeout' => 5,
-            'headers' => ['X-Requested-With' => 'XMLHttpRequest'],
-            'form_params' => ['url' => $domain]
-        ];
-        //是否使用代理
-        if ($proxy) {
-            $options['proxy'] = $proxy;
-        }
-        $url = 'http://api.weixinclup.com/index/checkurl.html';
-        $response = $client->request('POST', $url, $options);
-        $contents = $response->getBody()->getContents();
-        $res = json_decode($contents, true);
-        if ($res && $res['errcode'] === 0) {
-            $intercept = 2;
-        } elseif ($res && $res['errcode'] === 1) {
-            $intercept = 1;
-        } else {
-            throw new \Exception('Exceeding times');
-        }
-        return $intercept;
-    }
-
-    /**
-     * dingxsd.com 微信拦截检测
-     * @param $domain
-     * @param null $proxy
-     * @return int
-     * @throws \Exception
-     */
-    private function checkViaDingXsd($domain, $proxy = null)
-    {
-        $client = new Client();
-        $options = [
-            'connect_timeout' => 5,
-            'timeout' => 5,
-        ];
-        //是否使用代理
-        if ($proxy) {
-            $options['proxy'] = $proxy;
-        }
-        $url = 'http://weixin.dingxsd.com/index.php?s=/index/ck_blacklist&domain=' . $domain;
-        $response = $client->request('GET', $url, $options);
-        $contents = $response->getBody()->getContents();
-        $res = json_decode($contents, true);
-        if ($res && $res['status'] === 0) {
-            $intercept = 2;
-        } elseif ($res && $res['status'] === 1) {
-            $intercept = 1;
-        } else {
-            throw new \Exception('Exceeding times');
-        }
-        return $intercept;
-    }
-
 }

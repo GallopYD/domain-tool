@@ -12,6 +12,7 @@
 */
 
 Route::group(['namespace' => 'Web',], function () {
-    Route::get('/', 'IndexController@index')->name('index');
-    Route::get('/{type}', 'IndexController@index')->name('check');
+    Route::get('/', function () {
+        return redirect('api/doc');
+    });
 });

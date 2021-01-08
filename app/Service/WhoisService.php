@@ -2,7 +2,6 @@
 
 namespace App\Service;
 
-use App\Jobs\WhoisStorage;
 use App\Utils\CommonUtil;
 use App\Utils\DomainUtil;
 use Carbon\Carbon;

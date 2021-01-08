@@ -32,48 +32,6 @@ class DomainUtil
     }
 
     /**
-     * 获取域名后缀
-     * @param $domain
-     * @return mixed|null
-     */
-    public static function getDomainPreffix($domain)
-    {
-        $ret = self::parse($domain);
-        if (!empty($ret)) {
-            return $ret[0];
-        };
-        return null;
-    }
-
-    /**
-     * 获取域名后缀
-     * @param $domain
-     * @return mixed|null
-     */
-    public static function getDomainSuffix($domain)
-    {
-        $ret = self::parse($domain);
-        if (!empty($ret)) {
-            return $ret[1];
-        };
-        return null;
-    }
-
-    /**
-     * 获取域名品相
-     * @param $name
-     * @return number
-     */
-    public static function makeFeature($name)
-    {
-        //判断是否带4,true=1,false=0
-        $isFour = str_contains($name, '4') ? $isFour = 1 : $isFour = 0;//是否带4
-        $isLeopard = preg_match('/(\d)\1{2,}/', $name) ? $isLeopard = 1 : $isLeopard = 0;//是否是豹子
-        $isEight = preg_match('/8$/', $name) ? $isEight = 1 : $isEight = 0;//是否带8
-        return bindec($isEight . $isLeopard . $isFour);//将二进制转换为十进制数
-    }
-
-    /**
      * 只获取顶级域名
      * @param $domain
      * @return string
@@ -86,22 +44,6 @@ class DomainUtil
             $top_domain = $parse[0] . '.' . $parse[1];
         }
         return $top_domain;
-    }
-
-    /**
-     * 截取域名（去除头部http/https、尾部/）
-     * @param $domain
-     * @return bool|string
-     */
-    public static function getDomainExceptHttp($domain)
-    {
-        if (strpos($domain, 'http://') !== false || strpos($domain, 'https://') !== false) {
-            $domain = substr($domain, strpos($domain, '://') + 3);
-        }
-        if (ends_with($domain, '/')) {
-            $domain = substr($domain, 0, strlen($domain) - 1);
-        }
-        return $domain;
     }
 
     /**

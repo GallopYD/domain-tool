@@ -32,8 +32,8 @@ class BaseService
     }
 
     /**
-     * api validate 不通过没有具体信息修正
-     * @see(https://github.com/dingo/api/issues/584)
+     * validate
+     *
      * @param Request $request
      * @param array $rules
      * @param array $messages
@@ -47,17 +47,5 @@ class BaseService
             $msg = $validator->errors()->first();
             throw new ValidationHttpException($msg);
         }
-    }
-
-    /**
-     * Throw the failed validation exception.
-     * api validate 不通过没有具体信息修正
-     * @see(https://github.com/dingo/api/issues/584)
-     * @param Request $request
-     * @param $validator
-     */
-    protected function throwValidationException(\Illuminate\Http\Request $request, $errors)
-    {
-        throw new ValidationHttpException($errors);
     }
 }

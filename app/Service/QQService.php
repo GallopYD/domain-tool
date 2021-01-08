@@ -2,13 +2,11 @@
 
 namespace App\Service;
 
-use App\Utils\ProxyUtil;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 
 /**
- * QQ拦截检测
  * Class QQService
  * @package App\Service
  */
@@ -16,129 +14,42 @@ class QQService extends BaseService
 {
 
     /**
-     * QQ域名检测
+     * 电脑管家检测
+     *
      * @param $domain
-     * @param int $try
-     * @return bool|int
-     */
-    public function check($domain, $try = 1)
-    {
-        $intercept = 0;
-        //是否有缓存
-        if (!($this->cache_enable && ($intercept = Redis::get('intercept:qq:' . $domain)))) {
-            //获取代理
-            $proxy = $try > 1 ? ProxyUtil::getProxy(true) : ProxyUtil::getProxy(false);
-            $intercept = $this->checkViaGuanJia($domain, $proxy);
-            //查询失败重试
-            if ($intercept == 0 && $try < 3) {
-                return $this->check($domain, ++$try);
-            } elseif ($intercept == 0) {
-                //短链接查询失败，查询第三方
-                $intercept = $this->checkViaAdopt($domain, $proxy);
-            }
-        }
-        if ($intercept) {
-            //检测结果缓存
-            if ($this->cache_enable) {
-                Redis::setex('intercept:qq:' . $domain, 24 * 60 * 60, $intercept);
-            }
-            //代理缓存
-            if (isset($proxy)) {
-                Redis::setex('proxy', 60, $proxy);
-            }
-        } elseif (isset($proxy)) {
-            //删除代理
-            Redis::del('proxy');
-        }
-        return $intercept;
-    }
-
-    /**
-     * 腾讯电脑管家检测
-     * @param $domain
-     * @param null $proxy
      * @return int
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    private function checkViaGuanJia($domain, $proxy = null)
+    public function check($domain)
     {
-        try {
-            $client = new Client();
-            $options = [
-                'headers' => ['Referer' => 'https://guanjia.qq.com'],
-                'connect_timeout' => 5,
-                'timeout' => 5,
-            ];
-            //是否使用代理
-            if ($proxy) {
-                $options['proxy'] = $proxy;
+        if (!$intercept = Redis::get("intercept:qq:{$domain}")) {
+            try {
+                $client = new Client();
+                $options = [
+                    'headers' => ['Referer' => 'https://guanjia.qq.com'],
+                    'connect_timeout' => 5,
+                    'timeout' => 5,
+                ];
+                $url = 'https://cgi.urlsec.qq.com/index.php?m=check&a=check&url=http://' . $domain;
+                $response = $client->request('GET', $url, $options);
+                $contents = $response->getBody()->getContents();
+                $result = json_decode(substr($contents, 1, strlen($contents) - 2), true);
+
+                // whitetype 1：安全性未知 2：危险网站 3：安全网站
+                $intercept = $result['data']['results']['whitetype'] == 2 ? 2 : 1;
+                Log::info("QQ拦截查询成功[电脑管家][域名：{$domain}]：{$intercept}");
+
+            } catch (\Exception $exception) {
+                $intercept = 0;
+                Log::info("QQ拦截查询失败[电脑管家][域名：{$domain}]：{$exception->getMessage()}");
             }
-            $url = 'https://cgi.urlsec.qq.com/index.php?m=check&a=check&url=http://' . $domain;
-            $response = $client->request('GET', $url, $options);
-            $contents = $response->getBody()->getContents();
-            $result = json_decode(substr($contents, 1, strlen($contents) - 2), true);//去除首位括号
-            //whitetype 1：安全性未知 2：危险网站 3：安全网站
-            if ($result['data']['results']['whitetype'] == 2) {
-                $intercept = 2;
-            } else {
-                $intercept = 1;
-            }
-            Log::info("QQ拦截查询成功[电脑管家][域名：{$domain}][代理：$proxy]：" . $intercept);
-        } catch (\Exception $exception) {
-            $intercept = 0;//检测失败
-            Log::info("QQ拦截查询失败[电脑管家][域名：{$domain}][代理：$proxy]：" . $exception->getMessage());
         }
-        return $intercept;
-    }
 
-    /**
-     * 微信第三方检测
-     * @param $domain
-     * @param null $proxy
-     * @return int
-     */
-    private function checkViaAdopt($domain, $proxy = null)
-    {
-        $intercept = 0;
-        try {
-            $intercept = $this->checkViaYuMingJianCe($domain, $proxy);
-            Log::info("QQ拦截查询成功[yumingjiance.net][域名：{$domain}]：" . $intercept);
-        } catch (\Exception $exception) {
-            Log::info("QQ拦截查询失败[yumingjiance.net][域名：{$domain}][代理：$proxy]：" . $exception->getMessage());
+        // 检测结果缓存
+        if ($intercept && $this->cache_enable) {
+            Redis::setex("intercept:qq:{$domain}", 24 * 60 * 60, $intercept);
         }
-        return $intercept;
-    }
 
-    /**
-     * yumingjiance.net 微信拦截检测
-     * @param $domain
-     * @param null $proxy
-     * @return int
-     * @throws \Exception
-     */
-    private function checkViaYuMingJianCe($domain, $proxy = null)
-    {
-        $client = new Client();
-        $options = [
-            'connect_timeout' => 5,
-            'timeout' => 5,
-            'headers' => ['X-Requested-With' => 'XMLHttpRequest'],
-        ];
-        //是否使用代理
-        if ($proxy) {
-            $options['proxy'] = $proxy;
-        }
-        $url = 'http://www.yumingjiance.net/index.php?s=/index/ck_qq&domain=' . $domain;
-        $response = $client->request('GET', $url, $options);
-        $contents = $response->getBody()->getContents();
-        $res = json_decode($contents, true);
-        if ($res && $res['status'] === 0) {
-            $intercept = 2;
-        } elseif ($res && $res['status'] === 1) {
-            $intercept = 1;
-        } else {
-            throw new \Exception('Exceeding times');
-        }
-        return $intercept;
+        return (int)$intercept;
     }
-
 }
