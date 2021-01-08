@@ -73,35 +73,6 @@ class ToolController extends ApiController
     }
 
     /**
-     * 360拦截检测
-     * @SWG\Post(
-     *     path="/api/tools/360",
-     *     tags={"Tool"},
-     *     @SWG\Parameter(name="domain",required=true,in="formData",type="string",description="域名"),
-     *     @SWG\Parameter(name="timestamp",required=false,in="formData",type="string",description="时间戳"),
-     *     @SWG\Parameter(name="token",required=false,in="formData",type="string",description="token"),
-     *     @SWG\Response(response="200", description="")
-     * )
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function qiHoo(Request $request)
-    {
-        $this->validate($request, [
-            'domain' => 'required'
-        ], [
-            'domain.required' => '域名不能为空'
-        ]);
-        $domain = $request->domain;
-        if (!DomainUtil::checkFormat($domain)) {
-            throw new ApiException('域名格式不合法');
-        }
-        $service = new QiHooService();
-        $intercept = $service->check($domain);
-        return response()->json(['data' => compact('domain', 'intercept')]);
-    }
-
-    /**
      * whois查询
      * @SWG\Post(
      *     path="/api/tools/whois",

@@ -15,18 +15,14 @@ use Illuminate\Http\Request;
 
 Route::group([
     'namespace' => 'Api',
-    'prefix' => '',
     'as' => 'api',
     'limit' => 300,
     'expires' => 5
 ], function () {
     Route::get('tools/token', 'ToolController@getToken');
-    Route::group([
-        'middleware' => 'check.token'
-    ], function () {
+    Route::group(['middleware' => 'check.token'], function () {
         Route::post('tools/qq', 'ToolController@qq');//QQ拦截查询
         Route::post('tools/wechat', 'ToolController@weChat');//微信拦截查询
-        Route::post('tools/360', 'ToolController@qiHoo');//360拦截查询
         Route::post('tools/whois', 'ToolController@whois');//whois查询
     });
 });
