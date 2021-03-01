@@ -11,8 +11,4 @@
 |
 */
 
-Route::group(['namespace' => 'Web',], function () {
-    Route::get('/', function () {
-        return redirect('api/doc');
-    });
-});
+Route::get('/', 'Web\IndexController@index');

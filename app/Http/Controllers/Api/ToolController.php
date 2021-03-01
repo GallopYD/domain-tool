@@ -28,7 +28,7 @@ class ToolController extends ApiController
     public function qq(Request $request)
     {
         if (!$request->domain || !DomainUtil::checkFormat($request->domain)) {
-            throw new ApiException('域名格式不合法');
+            throw new ApiException("域名【{$request->domain}】格式不合法");
         }
         $service = new QQService();
         $intercept = $service->check($request->domain);
@@ -50,7 +50,7 @@ class ToolController extends ApiController
     public function wechat(Request $request)
     {
         if (!$request->domain || !DomainUtil::checkFormat($request->domain)) {
-            throw new ApiException('域名格式不合法');
+            throw new ApiException("域名【{$request->domain}】格式不合法");
         }
         $service = new WeChatService();
         $intercept = $service->check($request->domain);
@@ -72,7 +72,7 @@ class ToolController extends ApiController
     public function whois(Request $request)
     {
         if (!$request->domain || !DomainUtil::checkFormat($request->domain)) {
-            throw new ApiException('域名格式不合法');
+            throw new ApiException("域名【{$request->domain}】格式不合法");
         }
         $service = new WhoisService();
         $data = $service->check($request->domain, $request->fresh);

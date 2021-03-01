@@ -1,0 +1,58 @@
+body {
+    padding: 5px;
+    background: #F6F8FC;
+}
+
+#app {
+    padding: 0 500px;
+}
+
+.block {
+    font-size: 12px;
+    line-height: 2em;
+    margin-top: 10px;
+}
+
+.block button {
+    text-align: center;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.block .log {
+    margin-top: 10px;
+    padding-left: 5px;
+    height: 640px;
+    color: white;
+    background-color: #282c34;
+    overflow-y: auto;
+    display: none;
+}
+
+.van-grid-item {
+    text-align: center;
+    min-height: 85px;
+}
+
+.van-ellipsis {
+    font-size: 14px;
+    letter-spacing: 2px;
+}
+
+/* Scroll Bar */
+::-webkit-scrollbar-track-piece {
+    background: #F5F5F5;
+}
+
+::-webkit-scrollbar {
+    width: 3px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #D5D5D5;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #CDCDCD;
+}
