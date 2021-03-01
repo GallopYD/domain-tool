@@ -13,6 +13,7 @@
 - 微信：通过 **官方API** 查询，或者 **公众号短链接** 查询
 - Q Q：通过 **腾讯电脑管家** API查询
 - whois：通过 **whois/jwhois** 查询
+
 具体可查看 **源码** 或 **[博客](https://blog.csdn.net/qq292913477/article/details/86572412)**
 
 ## 环境
